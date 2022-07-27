@@ -1,14 +1,26 @@
+import { GetPlatform } from "./GetPlatform";
+
 const PageList = (argument = '') => {
 const API_KEY = process.env.PROJECT_API_KEY;
-// const searchBtn = document.getElementsByClassName('search-btn')
-// const searchBar = document.getElementById('search-bar')
-
+const select = document.getElementById('select')
 
    const preparePage = () => {
      const cleanedArgument = argument.trim().replace(/\s+/g, '-');
- 
+     
      const displayResults = (articles) => {
-       const resultsContent = articles.map((article) => (
+      let icons = [
+         '' ,
+       '<i class="fab fa-windows" style="font-size:30px"></i>',
+       '<i class="fab fa-playstation" style="font-size:30px"></i>', 
+       '<i class="fab fa-xbox" style="font-size:30px"></i>', 
+       '<i class="fab fa-app-store-ios" style="font-size:30px"></i>', 
+       '<i class="fab fa-apple" style="font-size:30px"></i>', 
+       '<i class="fab fa-linux" style="font-size:30px"></i>', 
+       '<i class="fab fa-nintendo-switch" style="font-size:30px"></i>', 
+       '<i class="fab fa-android" style="font-size:30px"></i>'
+      ];
+
+       const resultsContent = articles.map((article) => (  
       `
       <div id="container">   
          <div class="product-details">
@@ -26,7 +38,7 @@ const API_KEY = process.env.PROJECT_API_KEY;
                <ul>
                   <li><strong>Date de sortie : </strong> ${article.released} </li>
                   <li><strong>Genres : </strong>${article.genres.map(genre => genre.name)}</li>
-                  <li><strong>Decoration: </strong>${article.editor}</li>
+                  <li id="platformId"><strong>Platform:${article.parent_platforms ? article.parent_platforms.map(platform => icons[platform.platform.id]).join('') : ""}</li>
                   <li><strong>Note/Nombre de votes: </strong>${article.rating}/5 - ${article.ratings_count}</li>
                </ul>
             </div>
@@ -34,44 +46,69 @@ const API_KEY = process.env.PROJECT_API_KEY;
       </div>
       `
        ));
-
-
-      //  <div class="one-card-container">
-      //         <div class="background-image-container">
-      //          <a href="#pagedetail/${article.id}"><img src="${article.background_image}" alt="video game image" class="image-in-card"/></a>
-      //         </div>
-
-      //         <div class="game-name-container">
-      //           <p class="game-name">${article.name} ${article.id}</p>
-      //         </div>
-      //         <div class="platforms-container">
-      //           <p class="platforms">PLATFORMS : A FAIRE PLUS TARD</p>
-      //         </div>
-      //       </div>
-
+      //  GetPlatform()
        const resultsContainer = document.querySelector('.page-list .articles');
        resultsContainer.innerHTML = resultsContent.join("\n");
+
      };
+
+         const fetchList = (url, argument) => {
+            const finalURL = argument ? `${url}&search=${argument}` : url;
+            fetch(finalURL)
+               .then((response) => response.json())
+               .then((responseData) => {
+                  console.log(responseData);
+                  displayResults(responseData.results)
+                });
+         };
  
-     const fetchList = (url, argument) => {
-       const finalURL = argument ? `${url}&search=${argument}` : url;
-       fetch(finalURL)
-         .then((response) => response.json())
-         .then((responseData) => {
-           displayResults(responseData.results)
-           console.log(responseData.results);
-         });
-     };
+  
+   fetchList(`https://api.rawg.io/api/games?key=${API_KEY}`, cleanedArgument);
+   
+
+//---------------------------- TRIIIIIIIIIIII -----------------------------
+
+
  
-     fetchList(`https://api.rawg.io/api/games?key=${API_KEY}`, cleanedArgument);
+
+      // var platformList = []
+         const fetchPlatform = (url) => {
+            let finalURL = (url)
+            fetch(finalURL)
+            .then((response) => response.json())
+            .then((responseData) => {
+             displayList(responseData.results)
+            });
+         };
+
+
+     const displayList = (platforms) => {
+      const selectList =  platforms.map((platform) => (
+
+         `
+            <option>${platform.name}</option>
+         `
+   
+         ))
+   
+         const select = document.querySelector('select')
+         select.innerHTML = selectList.join("\n")
+     }
+    
+     fetchPlatform(`https://api.rawg.io/api/platforms/lists/parents?key=${API_KEY}`)
+
+
+     
+
+
    };
  
    const render = () => {
-     pageContent.innerHTML = `
+     pageContent.insertAdjacentHTML("beforeend", `
        <section class="page-list">
-         <div class="articles">Loading...</div>
+         <div class="articles"></div>
        </section>
-     `;
+     `);
  
      preparePage();
    };
@@ -79,4 +116,4 @@ const API_KEY = process.env.PROJECT_API_KEY;
    render();
  };
 
- export {PageList}
+ export { PageList }
